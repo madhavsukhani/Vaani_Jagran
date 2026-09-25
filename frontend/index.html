@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+        content="VAANI JAGRAN by Team EdgeVox – Edge-first ASR and Keyword Spotting on ESP32-S3." />
+  <title>VAANI JAGRAN · by: Team EdgeVox</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ─────────────────── HEADER ─────────────────── -->
+  <header class="header">
+    <div class="header__inner">
+      <div class="header__brand">
+        <div class="header__logo-badge">🎙️</div>
+        <div>
+          <div class="header__title-row">
+            <h1 class="header__title">VAANI JAGRAN</h1>
+            <span class="header__version-tag">EDGE ASR</span>
+          </div>
+          <p class="header__subtitle">by: <span class="header__team-name">Team EdgeVox</span></p>
+        </div>
+      </div>
+
+      <div class="header__meta">
+        <!-- Server connection pill -->
+        <div class="pill" id="server-pill">
+          <span class="pill__dot" id="server-dot"></span>
+          <span id="server-label">Connecting…</span>
+        </div>
+        <!-- ESP32 connection pill -->
+        <div class="pill" id="esp32-pill">
+          <span class="pill__dot" id="esp32-dot"></span>
+          <span id="esp32-label">ESP32 Offline</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ─────────────────── MAIN CONTAINER ─────────────────── -->
+  <main class="main">
+
+    <!-- ── ROW 1: System & ESP32 Hardware Stat Cards ── -->
+    <section class="cards" aria-label="Hardware & System Telemetry">
+
+      <!-- 1. System State Card (Listening / Detected / Streaming) -->
+      <article class="card card--status" id="card-status" data-state="Listening">
+        <div class="card__icon" id="state-icon">👂</div>
+        <div class="card__body">
+          <p class="card__label">System State</p>
+          <p class="card__value" id="system-state">Listening</p>
+          <p class="card__subtext" id="system-state-desc">Waiting for wake-word</p>
+        </div>
+        <div class="card__glow"></div>
+      </article>
+
+      <!-- 2. ESP32 CPU Usage Card (Dual Core Avg + C0/C1) -->
+      <article class="card card--cpu" id="card-cpu">
+        <div class="card__icon">⚡</div>
+        <div class="card__body">
+          <p class="card__label">ESP32 CPU Usage</p>
+          <p class="card__value" id="esp32-cpu">0%</p>
+          <p class="card__subtext" id="esp32-cpu-cores">Core 0: 0% · Core 1: 0%</p>
+        </div>
+        <div class="card__glow"></div>
+      </article>
+
+      <!-- 3. ESP32 RAM Usage Card (Heap Free / Total) -->
+      <article class="card card--ram" id="card-ram">
+        <div class="card__icon">💾</div>
+        <div class="card__body">
+          <p class="card__label">ESP32 RAM (Heap)</p>
+          <p class="card__value" id="esp32-ram">0%</p>
+          <p class="card__subtext" id="esp32-ram-detail">0 KB / 0 KB</p>
+        </div>
+        <div class="card__glow"></div>
+      </article>
+
+      <!-- 4. Latency Card (t2 - t1 ms) -->
+      <article class="card card--latency" id="card-latency">
+        <div class="card__icon">⏱️</div>
+        <div class="card__body">
+          <p class="card__label">Activation Latency</p>
+          <p class="card__value" id="latency-value">—</p>
+          <p class="card__subtext">ESP32 t1 → Server t2</p>
+        </div>
+        <div class="card__glow"></div>
+      </article>
+
+      <!-- 5. Buffer Duration -->
+      <article class="card card--buffer" id="card-buffer">
+        <div class="card__icon">🔊</div>
+        <div class="card__body">
+          <p class="card__label">Buffer Duration</p>
+          <p class="card__value" id="buffer-value">0.00 s</p>
+          <p class="card__subtext">Max 10.0s burst</p>
+        </div>
+        <div class="card__glow"></div>
+      </article>
+
+      <!-- 6. Total Recordings Saved -->
+      <article class="card card--segments" id="card-segments">
+        <div class="card__icon">🗂️</div>
+        <div class="card__body">
+          <p class="card__label">Saved Audio Clips</p>
+          <p class="card__value" id="segments-count">0</p>
+          <p class="card__subtext">Stored in /recordings</p>
+        </div>
+        <div class="card__glow"></div>
+      </article>
+
+    </section>
+
+    <!-- ── ROW 2: Live Transcript & Saved Recordings ── -->
+    <section class="content-grid">
+
+      <!-- Live transcript panel -->
+      <div class="panel panel--transcript">
+        <div class="panel__header">
+          <h2 class="panel__title">
+            <span class="panel__title-icon">📝</span>Live ASR Transcript
+          </h2>
+          <div class="panel__badge" id="asr-badge">Listening…</div>
+        </div>
+
+        <div class="transcript-box" id="transcript-box" role="log" aria-live="polite">
+          <p class="transcript__placeholder" id="transcript-placeholder">
+            Speak the keyword to activate streaming. Live transcript will appear here…
+          </p>
+          <p class="transcript__text" id="transcript-text"></p>
+        </div>
+
+        <!-- Waveform visualiser (canvas) -->
+        <div class="waveform-wrap">
+          <canvas class="waveform" id="waveform-canvas" width="800" height="60"
+                  aria-label="Audio waveform visualiser"></canvas>
+        </div>
+      </div>
+
+      <!-- Recordings Player panel -->
+      <div class="panel panel--recordings">
+        <div class="panel__header">
+          <h2 class="panel__title">
+            <span class="panel__title-icon">🎵</span>Audio Recordings
+          </h2>
+          <div class="recordings-actions">
+            <span class="panel__badge" id="recordings-count-badge">0 clips</span>
+            <button class="btn btn--refresh" id="refresh-recordings-btn" title="Refresh clips">↻</button>
+          </div>
+        </div>
+
+        <div class="recordings-list" id="recordings-list">
+          <p class="recordings__empty" id="recordings-empty">
+            Completed speech bursts will appear here with an in-browser audio player.
+          </p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── ROW 3: System Event Log ── -->
+    <section class="panel panel--log">
+      <div class="panel__header">
+        <h2 class="panel__title">
+          <span class="panel__title-icon">🖥️</span>System Telemetry & Event Log
+        </h2>
+        <button class="btn btn--ghost" id="clear-log-btn" title="Clear log">
+          Clear
+        </button>
+      </div>
+      <div class="log-box" id="log-box" role="log" aria-live="polite"></div>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

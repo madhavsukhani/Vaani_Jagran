@@ -1,0 +1,20 @@
+# macOS and editor files
+.DS_Store
+.vscode/
+
+# Python environments, caches, and local tooling
+backend/venv/
+**/__pycache__/
+*.py[cod]
+
+# Runtime recordings and generated local data
+backend/recordings/*
+!backend/recordings/.gitkeep
+esp32/VAANI_JAGRAN_ASR/*.zip
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
+*.local
+esp32/VAANI_JAGRAN_ASR/secrets.h
