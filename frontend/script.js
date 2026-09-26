@@ -10,55 +10,55 @@
 // ─────────────────────────────────────────────
 const SERVER_HOST = window.location.hostname || 'localhost';
 const SERVER_PORT = 8000;
-const WS_URL      = `ws://${SERVER_HOST}:${SERVER_PORT}/ws/frontend`;
-const HTTP_BASE   = `http://${SERVER_HOST}:${SERVER_PORT}`;
+const WS_URL = `ws://${SERVER_HOST}:${SERVER_PORT}/ws/frontend`;
+const HTTP_BASE = `http://${SERVER_HOST}:${SERVER_PORT}`;
 const RECONNECT_DELAY_MS = 2500;
 
 // ─────────────────────────────────────────────
 //  DOM references
 // ─────────────────────────────────────────────
-const $serverPill       = document.getElementById('server-pill');
-const $serverLabel      = document.getElementById('server-label');
-const $esp32Pill        = document.getElementById('esp32-pill');
-const $esp32Label       = document.getElementById('esp32-label');
+const $serverPill = document.getElementById('server-pill');
+const $serverLabel = document.getElementById('server-label');
+const $esp32Pill = document.getElementById('esp32-pill');
+const $esp32Label = document.getElementById('esp32-label');
 
-const $cardStatus       = document.getElementById('card-status');
-const $systemState      = document.getElementById('system-state');
-const $systemStateDesc  = document.getElementById('system-state-desc');
-const $stateIcon        = document.getElementById('state-icon');
+const $cardStatus = document.getElementById('card-status');
+const $systemState = document.getElementById('system-state');
+const $systemStateDesc = document.getElementById('system-state-desc');
+const $stateIcon = document.getElementById('state-icon');
 
-const $esp32Cpu         = document.getElementById('esp32-cpu');
-const $esp32CpuCores    = document.getElementById('esp32-cpu-cores');
-const $esp32Ram         = document.getElementById('esp32-ram');
-const $esp32RamDetail   = document.getElementById('esp32-ram-detail');
+const $esp32Cpu = document.getElementById('esp32-cpu');
+const $esp32CpuCores = document.getElementById('esp32-cpu-cores');
+const $esp32Ram = document.getElementById('esp32-ram');
+const $esp32RamDetail = document.getElementById('esp32-ram-detail');
 
-const $latencyValue     = document.getElementById('latency-value');
-const $bufferValue      = document.getElementById('buffer-value');
-const $segmentsCount    = document.getElementById('segments-count');
+const $latencyValue = document.getElementById('latency-value');
+const $bufferValue = document.getElementById('buffer-value');
+const $segmentsCount = document.getElementById('segments-count');
 
-const $asrBadge         = document.getElementById('asr-badge');
-const $transcriptBox    = document.getElementById('transcript-box');
-const $transcriptPh     = document.getElementById('transcript-placeholder');
-const $transcriptText   = document.getElementById('transcript-text');
+const $asrBadge = document.getElementById('asr-badge');
+const $transcriptBox = document.getElementById('transcript-box');
+const $transcriptPh = document.getElementById('transcript-placeholder');
+const $transcriptText = document.getElementById('transcript-text');
 
-const $recordingsList   = document.getElementById('recordings-list');
-const $recordingsEmpty  = document.getElementById('recordings-empty');
-const $recordingsBadge  = document.getElementById('recordings-count-badge');
-const $refreshRecBtn    = document.getElementById('refresh-recordings-btn');
+const $recordingsList = document.getElementById('recordings-list');
+const $recordingsEmpty = document.getElementById('recordings-empty');
+const $recordingsBadge = document.getElementById('recordings-count-badge');
+const $refreshRecBtn = document.getElementById('refresh-recordings-btn');
 
-const $logBox           = document.getElementById('log-box');
-const $clearLogBtn      = document.getElementById('clear-log-btn');
+const $logBox = document.getElementById('log-box');
+const $clearLogBtn = document.getElementById('clear-log-btn');
 
-const $waveformCanvas   = document.getElementById('waveform-canvas');
-const waveCtx           = $waveformCanvas.getContext('2d');
+const $waveformCanvas = document.getElementById('waveform-canvas');
+const waveCtx = $waveformCanvas.getContext('2d');
 
 // ─────────────────────────────────────────────
 //  State
 // ─────────────────────────────────────────────
-let ws             = null;
+let ws = null;
 let reconnectTimer = null;
-let waveAnimId     = null;
-let isStreaming    = false;
+let waveAnimId = null;
+let isStreaming = false;
 let displayedFiles = new Set();
 const waveformLevels = [];
 const MAX_WAVEFORM_LEVELS = 180;
@@ -123,8 +123,12 @@ function handleMessage(payload) {
     updateTelemetry(payload.telemetry);
   }
 
-  if (payload.latency_ms !== undefined) {
-    updateLatency(payload.latency_ms);
+  if (payload.e2e_latency_ms !== undefined && payload.e2e_latency_ms !== null) {
+    updateLatency(payload.e2e_latency_ms);
+  }
+
+  if (type === 'e2e_latency') {
+    log('info', `E2E wake-to-audio latency: ${Math.round(payload.e2e_latency_ms)} ms`);
   }
 
   if (payload.buffer_duration_s !== undefined) {

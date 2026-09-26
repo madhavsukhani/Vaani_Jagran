@@ -12,7 +12,7 @@ HTTP endpoints:
   GET /audio/{index}             – backwards-compatible WAV endpoint
   GET /health                    – system health check
 """
-
+_start_stream_recv_ms: float = 0.0
 import asyncio
 import io
 import json
@@ -65,7 +65,8 @@ latest_transcript: str = ""
 
 # Latency tracking
 activation_latency_ms: float = 0.0
-stream_start_t1: Optional[float] = None
+e2e_latency_ms: Optional[float] = None
+_start_stream_recv_ms: Optional[float] = None   # laptop wall-clock when start_stream arrived      # final number to display         # the number we actually want to display
 
 # ESP32 Hardware Telemetry (Core 0, Core 1, RAM)
 esp32_telemetry: dict = {
@@ -183,7 +184,6 @@ def _build_status_payload() -> dict:
         "type": "status",
         "esp32_connected": esp32_connected,
         "system_state": system_state,
-        "latency_ms": round(activation_latency_ms, 1),
         "buffer_duration_s": round(audio_buffer.get_buffer_duration_seconds(), 2),
         "transcript": latest_transcript,
         "recordings_count": len(recordings_db),
@@ -261,7 +261,8 @@ async def _save_and_broadcast_recording():
 @app.websocket("/ws/esp32")
 async def esp32_endpoint(ws: WebSocket) -> None:
     global esp32_connected, esp32_ws, system_state, latest_transcript
-    global activation_latency_ms, stream_start_t1, esp32_telemetry
+    global activation_latency_ms, esp32_telemetry
+    global e2e_latency_ms, _start_stream_recv_ms
 
     await ws.accept()
     esp32_connected = True
@@ -319,23 +320,14 @@ async def esp32_endpoint(ws: WebSocket) -> None:
                             })
 
                     elif mtype == "start_stream":
-                        # Keyword detected! Stream initiating
                         system_state = "Detected"
-                        stream_start_t1 = data.get("t1_ms", None)
-                        recv_time_ms = time.time() * 1000.0
-
-                        if stream_start_t1:
-                            activation_latency_ms = max(5.0, recv_time_ms - stream_start_t1)
-                            if activation_latency_ms > 2000:
-                                # Clock offset handling: fallback to local ping estimate
-                                activation_latency_ms = 42.0
-                        else:
-                            activation_latency_ms = 35.0
+                        _start_stream_recv_ms = time.time() * 1000.0
+                        e2e_latency_ms = None
 
                         audio_buffer.reset()
                         latest_transcript = ""
                         system_state = "Streaming"
-                        logger.info("Stream started! Activation latency: %.1f ms", activation_latency_ms)
+                        logger.info("[E2E] start_stream received; starting stopwatch.")
 
                         await broadcast({
                             "type": "event",
@@ -361,6 +353,17 @@ async def esp32_endpoint(ws: WebSocket) -> None:
 
             # Handle Binary PCM audio chunks
             elif "bytes" in msg and msg["bytes"]:
+                # Compute E2E on the FIRST chunk after start_stream.
+                if _start_stream_recv_ms is not None:
+                    recv_ms = time.time() * 1000.0
+                    e2e_latency_ms = recv_ms - _start_stream_recv_ms
+                    logger.info("[E2E] start_stream -> first chunk = %.1f ms", e2e_latency_ms)
+                    _start_stream_recv_ms = None
+                    await broadcast({
+                        "type": "e2e_latency",
+                        "e2e_latency_ms": round(e2e_latency_ms, 1),
+                    })
+
                 if system_state != "Streaming":
                     system_state = "Streaming"
 

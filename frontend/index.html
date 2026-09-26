@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description"
-        content="VAANI JAGRAN by Team EdgeVox – Edge-first ASR and Keyword Spotting on ESP32-S3." />
+  <meta name="description" content="VAANI JAGRAN by Team EdgeVox – Edge-first ASR and Keyword Spotting on ESP32-S3." />
   <title>VAANI JAGRAN · by: Team EdgeVox</title>
 
   <!-- Google Fonts -->
@@ -12,11 +12,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet"
-  />
+    rel="stylesheet" />
 
   <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
   <!-- ─────────────────── HEADER ─────────────────── -->
@@ -87,13 +87,13 @@
         <div class="card__glow"></div>
       </article>
 
-      <!-- 4. Latency Card (t2 - t1 ms) -->
+      <!-- 4. E2E Latency -->
       <article class="card card--latency" id="card-latency">
         <div class="card__icon">⏱️</div>
         <div class="card__body">
-          <p class="card__label">Activation Latency</p>
+          <p class="card__label">E2E Latency</p>
           <p class="card__value" id="latency-value">—</p>
-          <p class="card__subtext">ESP32 t1 → Server t2</p>
+          <p class="card__subtext">Wake → First audio @ server</p>
         </div>
         <div class="card__glow"></div>
       </article>
@@ -144,7 +144,7 @@
         <!-- Waveform visualiser (canvas) -->
         <div class="waveform-wrap">
           <canvas class="waveform" id="waveform-canvas" width="800" height="60"
-                  aria-label="Audio waveform visualiser"></canvas>
+            aria-label="Audio waveform visualiser"></canvas>
         </div>
       </div>
 
@@ -186,4 +186,5 @@
 
   <script src="script.js"></script>
 </body>
+
 </html>
